@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Python 統計學教室第 9 章：信賴區間">
-  <title>第 9 章｜信賴區間｜Python 統計學教室</title>
+  <meta name="description" content="Python 統計學教室第 9 章：假設檢定">
+  <title>第 9 章｜假設檢定｜Python 統計學教室</title>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body data-chapter="09">
@@ -20,7 +20,6 @@
   </div>
 </header>
 
-
 <div class="site-layout">
   <aside class="sidebar" aria-label="課程章節導覽">
     <p class="sidebar-title">Course Menu</p>
@@ -30,67 +29,284 @@
   <main class="content">
     <section class="hero">
       <p class="eyebrow">Chapter 09</p>
-      <h1>信賴區間</h1>
-      <p class="lead">母體平均數、比例與變異數的區間估計</p>
+      <h1>假設檢定</h1>
+      <p class="lead">
+        直接複製這份 Python 程式，只要修改資料、α、H₀ 與檢定方向，
+        即可完成單一母體平均數假設檢定。
+      </p>
     </section>
 
-    <section><h2 id="learning-goals">本章學習目標</h2>
-<ul>
-  <li>理解本章核心概念。</li>
-  <li>知道如何使用 Python 完成基本分析。</li>
-  <li>能解讀輸出結果並說明其統計意義。</li>
-</ul>
-</section>
-<section><h2 id="concepts">核心觀念</h2>
-<div class="placeholder">
-  <strong>內容待補：</strong>
-  這裡可以放定義、重要公式、直覺解釋與常見誤區。
-</div>
-</section>
-<section><h2 id="python-demo">Python 實作</h2>
-<p>以下先保留一個可替換的程式碼區塊：</p>
-<pre><code># TODO: 在此加入本章 Python 範例
-import numpy as np
-import pandas as pd
+    <section>
+      <h2 id="how-to-use">只需要修改這五個地方</h2>
+      <ul>
+        <li><code>data</code>：樣本資料。</li>
+        <li><code>mu0</code>：H₀ 中假設的母體平均數。</li>
+        <li><code>alpha</code>：顯著水準，例如 0.05。</li>
+        <li><code>alternative</code>：雙尾、右尾或左尾。</li>
+        <li><code>sigma</code>：母體標準差已知時填數值；未知時填 <code>None</code>。</li>
+      </ul>
+    </section>
 
-print("Hello, Statistics!")</code></pre>
-</section>
-<section><h2 id="example">範例解析</h2>
-<div class="placeholder">
-  <strong>範例待補：</strong>
-  可以加入資料集、計算步驟、圖表與結果解讀。
-</div>
-</section>
-<section><h2 id="practice">練習題</h2>
-<ol>
-  <li>概念題：請解釋本章最重要的統計概念。</li>
-  <li>計算題：請使用 Python 完成一個基礎分析。</li>
-  <li>應用題：請根據分析結果提出結論。</li>
-</ol>
-</section>
-<section><h2 id="summary">本章重點整理</h2>
-<div class="callout">
-  本區可整理三到五個重點，作為考前複習與快速查閱。
-</div>
-</section>
+    <section>
+      <h2 id="template">假設檢定通用模板</h2>
+
+<pre><code>import numpy as np
+from scipy import stats
+
+# =========================================================
+# 單一母體平均數假設檢定
+# 只需要修改「使用者設定區」
+# =========================================================
+
+# ---------------------------------------------------------
+# 1. 使用者設定區
+# ---------------------------------------------------------
+
+data = np.array([
+    98, 102, 95, 100, 105,
+    97, 103, 99, 101, 96
+], dtype=float)
+
+# H0: μ = mu0
+mu0 = 100
+
+# 顯著水準 alpha
+alpha = 0.05
+
+# 檢定方向
+# "two-sided"：H1: μ != mu0
+# "greater"  ：H1: μ &gt; mu0
+# "less"     ：H1: μ &lt; mu0
+alternative = "two-sided"
+
+# 母體標準差
+# 已知時填數值，例如 sigma = 15
+# 未知時填 None，程式會自動使用 t 檢定
+sigma = None
+
+
+# ---------------------------------------------------------
+# 2. 樣本統計量
+# ---------------------------------------------------------
+
+n = len(data)
+x_bar = np.mean(data)
+s = np.std(data, ddof=1)
+
+
+# ---------------------------------------------------------
+# 3. 執行檢定
+# ---------------------------------------------------------
+
+if sigma is None:
+
+    # 母體標準差未知：t 檢定
+    test_type = "單一樣本 t 檢定"
+
+    result = stats.ttest_1samp(
+        a=data,
+        popmean=mu0,
+        alternative=alternative
+    )
+
+    test_statistic = result.statistic
+    p_value = result.pvalue
+
+else:
+
+    # 母體標準差已知：z 檢定
+    test_type = "單一樣本 z 檢定"
+
+    standard_error = sigma / np.sqrt(n)
+
+    test_statistic = (
+        x_bar - mu0
+    ) / standard_error
+
+    if alternative == "two-sided":
+
+        p_value = 2 * (
+            1 - stats.norm.cdf(
+                abs(test_statistic)
+            )
+        )
+
+    elif alternative == "greater":
+
+        p_value = (
+            1 - stats.norm.cdf(
+                test_statistic
+            )
+        )
+
+    else:
+
+        p_value = stats.norm.cdf(
+            test_statistic
+        )
+
+
+# ---------------------------------------------------------
+# 4. 自動產生 H0、H1
+# ---------------------------------------------------------
+
+h0_text = f"H0: μ = {mu0}"
+
+if alternative == "two-sided":
+    h1_text = f"H1: μ ≠ {mu0}"
+
+elif alternative == "greater":
+    h1_text = f"H1: μ &gt; {mu0}"
+
+else:
+    h1_text = f"H1: μ &lt; {mu0}"
+
+
+# ---------------------------------------------------------
+# 5. 自動判斷結果
+# ---------------------------------------------------------
+
+if p_value &lt; alpha:
+
+    decision = "拒絕 H0"
+
+    conclusion = (
+        f"在顯著水準 α = {alpha} 下，"
+        "有足夠證據支持 H1。"
+    )
+
+else:
+
+    decision = "不拒絕 H0"
+
+    conclusion = (
+        f"在顯著水準 α = {alpha} 下，"
+        "沒有足夠證據支持 H1。"
+    )
+
+
+# ---------------------------------------------------------
+# 6. 輸出結果
+# ---------------------------------------------------------
+
+print("=" * 45)
+print("假設檢定結果")
+print("=" * 45)
+
+print("檢定方法：", test_type)
+print(h0_text)
+print(h1_text)
+
+print("-" * 45)
+
+print("樣本數 n =", n)
+print("樣本平均數 =", round(x_bar, 4))
+print("樣本標準差 =", round(s, 4))
+print("檢定統計量 =", round(test_statistic, 4))
+print("p-value =", round(p_value, 6))
+
+print("-" * 45)
+
+print("決策：", decision)
+print("結論：", conclusion)
+
+print("=" * 45)</code></pre>
+    </section>
+
+    <section>
+      <h2 id="settings">三種檢定方向</h2>
+
+      <h3 id="two-sided">雙尾檢定</h3>
+<pre><code># H0: μ = 100
+# H1: μ != 100
+
+mu0 = 100
+alpha = 0.05
+alternative = "two-sided"</code></pre>
+
+      <h3 id="greater">右尾檢定</h3>
+<pre><code># H0: μ = 100
+# H1: μ &gt; 100
+
+mu0 = 100
+alpha = 0.05
+alternative = "greater"</code></pre>
+
+      <h3 id="less">左尾檢定</h3>
+<pre><code># H0: μ = 100
+# H1: μ &lt; 100
+
+mu0 = 100
+alpha = 0.05
+alternative = "less"</code></pre>
+    </section>
+
+    <section>
+      <h2 id="z-or-t">切換 z 檢定與 t 檢定</h2>
+
+      <h3 id="t-test">t 檢定</h3>
+<pre><code># 母體標準差未知
+sigma = None</code></pre>
+
+      <h3 id="z-test">z 檢定</h3>
+<pre><code># 母體標準差已知，例如 σ = 15
+sigma = 15</code></pre>
+
+      <div class="callout">
+        程式會自動判斷：
+        <code>sigma = None</code> 時使用 t 檢定；
+        填入母體標準差時使用 z 檢定。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="decision">結果怎麼看</h2>
+      <ul>
+        <li><code>p-value &lt; alpha</code>：拒絕 H₀。</li>
+        <li><code>p-value ≥ alpha</code>：不拒絕 H₀。</li>
+      </ul>
+
+      <div class="callout">
+        統計上的標準用詞是「不拒絕 H₀」，而不是「接受 H₀」。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="practice">練習題</h2>
+      <ol>
+        <li>將 <code>mu0</code> 改成 98，執行雙尾檢定。</li>
+        <li>將 <code>alternative</code> 改成 <code>"greater"</code>。</li>
+        <li>將 <code>alpha</code> 從 0.05 改成 0.01。</li>
+        <li>分別設定 <code>sigma = None</code> 與 <code>sigma = 15</code>，比較結果。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="summary">本章重點整理</h2>
+      <ul>
+        <li>修改 <code>mu0</code> 即可設定 H₀。</li>
+        <li>修改 <code>alpha</code> 即可設定顯著水準。</li>
+        <li>修改 <code>alternative</code> 即可切換雙尾、右尾與左尾。</li>
+        <li><code>sigma = None</code> 時使用 t 檢定。</li>
+        <li>填入 <code>sigma</code> 時使用 z 檢定。</li>
+        <li>當 <code>p-value &lt; alpha</code> 時拒絕 H₀。</li>
+      </ul>
+    </section>
 
     <nav class="chapter-pagination" aria-label="章節切換">
-      
-        <a href="ch08.html">
-          <span class="pagination-label">← 上一章</span>
-          <span class="pagination-title">第 8 章｜抽樣與抽樣分配</span>
-        </a>
-        
-      
-        <a href="ch10.html">
-          <span class="pagination-label">下一章 →</span>
-          <span class="pagination-title">第 10 章｜假設檢定</span>
-        </a>
-        
+      <a href="ch08.html">
+        <span class="pagination-label">← 上一章</span>
+        <span class="pagination-title">第 8 章｜區間估計</span>
+      </a>
+
+      <a href="ch10.html">
+        <span class="pagination-label">下一章 →</span>
+        <span class="pagination-title">第 10 章｜兩組與多組比較</span>
+      </a>
     </nav>
 
     <footer class="site-footer">
-      © <span id="current-year"></span> Python 統計學教室．Built for GitHub Pages.
+      <p>© <span id="current-year"></span> Python 統計學教室．Built for GitHub Pages.</p>
     </footer>
   </main>
 
@@ -99,8 +315,8 @@ print("Hello, Statistics!")</code></pre>
     <ul id="page-toc-list"></ul>
   </aside>
 </div>
+
 <div id="backdrop" class="backdrop"></div>
 <script src="../assets/js/site.js"></script>
-
 </body>
 </html>
