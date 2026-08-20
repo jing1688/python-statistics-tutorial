@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Python 統計學教室第 10 章：假設檢定">
-  <title>第 10 章｜假設檢定｜Python 統計學教室</title>
+  <meta name="description" content="Python 統計學教室第 10 章：兩組比較">
+  <title>第 10 章｜兩組比較｜Python 統計學教室</title>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body data-chapter="10">
@@ -20,7 +20,6 @@
   </div>
 </header>
 
-
 <div class="site-layout">
   <aside class="sidebar" aria-label="課程章節導覽">
     <p class="sidebar-title">Course Menu</p>
@@ -30,67 +29,386 @@
   <main class="content">
     <section class="hero">
       <p class="eyebrow">Chapter 10</p>
-      <h1>假設檢定</h1>
-      <p class="lead">虛無假設、p 值、型一與型二錯誤</p>
+      <h1>兩組比較</h1>
+      <p class="lead">
+        三個可以直接複製修改的 Python 模板：獨立兩樣本 t 檢定、配對 t 檢定、兩母體比例 z 檢定。
+      </p>
     </section>
 
-    <section><h2 id="learning-goals">本章學習目標</h2>
-<ul>
-  <li>理解本章核心概念。</li>
-  <li>知道如何使用 Python 完成基本分析。</li>
-  <li>能解讀輸出結果並說明其統計意義。</li>
-</ul>
-</section>
-<section><h2 id="concepts">核心觀念</h2>
-<div class="placeholder">
-  <strong>內容待補：</strong>
-  這裡可以放定義、重要公式、直覺解釋與常見誤區。
-</div>
-</section>
-<section><h2 id="python-demo">Python 實作</h2>
-<p>以下先保留一個可替換的程式碼區塊：</p>
-<pre><code># TODO: 在此加入本章 Python 範例
-import numpy as np
-import pandas as pd
+    <section>
+      <h2 id="choose-test">先選你要哪一個</h2>
+      <ul>
+        <li><strong>兩群不同的人／物件，比平均數：</strong>獨立兩樣本 t 檢定。</li>
+        <li><strong>同一批對象前後比較／一對一配對，比平均差：</strong>配對 t 檢定。</li>
+        <li><strong>兩群不同的人／物件，比成功率或比例：</strong>兩母體比例 z 檢定。</li>
+      </ul>
 
-print("Hello, Statistics!")</code></pre>
-</section>
-<section><h2 id="example">範例解析</h2>
-<div class="placeholder">
-  <strong>範例待補：</strong>
-  可以加入資料集、計算步驟、圖表與結果解讀。
-</div>
-</section>
-<section><h2 id="practice">練習題</h2>
-<ol>
-  <li>概念題：請解釋本章最重要的統計概念。</li>
-  <li>計算題：請使用 Python 完成一個基礎分析。</li>
-  <li>應用題：請根據分析結果提出結論。</li>
-</ol>
-</section>
-<section><h2 id="summary">本章重點整理</h2>
-<div class="callout">
-  本區可整理三到五個重點，作為考前複習與快速查閱。
-</div>
-</section>
+      <div class="callout">
+        三個模板都只需要修改最上方的「使用者設定區」。<br>
+        <code>alternative = "two-sided"</code> 為雙尾；
+        <code>"greater"</code> 為右尾；
+        <code>"less"</code> 為左尾。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="independent-t">10.1 獨立兩樣本 t 檢定</h2>
+      <p>
+        適合比較兩個互相獨立群體的平均數，例如 A 班與 B 班平均成績。
+        模板預設使用 Welch's t-test，因此不強制假設兩組母體變異數相等。
+      </p>
+
+<pre><code>import numpy as np
+from scipy import stats
+
+# =========================================================
+# 模型 1：獨立兩樣本 t 檢定
+# H0: μ1 - μ2 = 0
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改這裡
+# ---------------------------------------------------------
+
+group1 = np.array([80, 82, 78, 90, 85], dtype=float)
+group2 = np.array([75, 77, 72, 80, 79], dtype=float)
+
+alpha = 0.05
+
+# "two-sided"：H1: μ1 != μ2
+# "greater"  ：H1: μ1 &gt; μ2
+# "less"     ：H1: μ1 &lt; μ2
+alternative = "two-sided"
+
+
+# ---------------------------------------------------------
+# 執行檢定
+# ---------------------------------------------------------
+
+result = stats.ttest_ind(
+    group1,
+    group2,
+    equal_var=False,
+    alternative=alternative
+)
+
+t_stat = result.statistic
+p_value = result.pvalue
+
+mean1 = np.mean(group1)
+mean2 = np.mean(group2)
+
+
+# ---------------------------------------------------------
+# 自動產生假設
+# ---------------------------------------------------------
+
+h0 = "H0: μ1 - μ2 = 0"
+
+if alternative == "two-sided":
+    h1 = "H1: μ1 - μ2 ≠ 0"
+elif alternative == "greater":
+    h1 = "H1: μ1 - μ2 &gt; 0"
+else:
+    h1 = "H1: μ1 - μ2 &lt; 0"
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "有足夠證據支持 H1。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據支持 H1。"
+
+
+# ---------------------------------------------------------
+# 輸出
+# ---------------------------------------------------------
+
+print("=== 獨立兩樣本 t 檢定 ===")
+print(h0)
+print(h1)
+print("Group 1 平均數 =", round(mean1, 4))
+print("Group 2 平均數 =", round(mean2, 4))
+print("平均數差 =", round(mean1 - mean2, 4))
+print("t =", round(t_stat, 4))
+print("p-value =", round(p_value, 6))
+print("alpha =", alpha)
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+    </section>
+
+    <section>
+      <h2 id="paired-t">10.2 配對 t 檢定</h2>
+      <p>
+        適合同一批對象的前後測，或資料具有一對一配對關係的情況。
+        例如同一批學生上課前與上課後的成績。
+      </p>
+
+<pre><code>import numpy as np
+from scipy import stats
+
+# =========================================================
+# 模型 2：配對 t 檢定
+# 定義差值 d = after - before
+# H0: μd = 0
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改這裡
+# ---------------------------------------------------------
+
+before = np.array([70, 68, 75, 80, 72], dtype=float)
+after  = np.array([75, 72, 78, 85, 76], dtype=float)
+
+alpha = 0.05
+
+# 注意：本模板的差值定義為 after - before
+#
+# "two-sided"：H1: μd != 0
+# "greater"  ：H1: μd &gt; 0，也就是 after &gt; before
+# "less"     ：H1: μd &lt; 0，也就是 after &lt; before
+alternative = "two-sided"
+
+
+# ---------------------------------------------------------
+# 執行檢定
+# ---------------------------------------------------------
+
+if len(before) != len(after):
+    raise ValueError("配對資料的 before 與 after 筆數必須相同。")
+
+# scipy 的 ttest_rel(a, b) 檢定的是 mean(a - b)
+# 因此放入 after, before，讓差值方向為 after - before
+result = stats.ttest_rel(
+    after,
+    before,
+    alternative=alternative
+)
+
+t_stat = result.statistic
+p_value = result.pvalue
+
+difference = after - before
+mean_difference = np.mean(difference)
+
+
+# ---------------------------------------------------------
+# 自動產生假設
+# ---------------------------------------------------------
+
+h0 = "H0: μd = 0"
+
+if alternative == "two-sided":
+    h1 = "H1: μd ≠ 0"
+elif alternative == "greater":
+    h1 = "H1: μd &gt; 0"
+else:
+    h1 = "H1: μd &lt; 0"
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "有足夠證據支持 H1。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據支持 H1。"
+
+
+# ---------------------------------------------------------
+# 輸出
+# ---------------------------------------------------------
+
+print("=== 配對 t 檢定 ===")
+print("差值定義：after - before")
+print(h0)
+print(h1)
+print("Before 平均數 =", round(np.mean(before), 4))
+print("After 平均數 =", round(np.mean(after), 4))
+print("平均差 =", round(mean_difference, 4))
+print("t =", round(t_stat, 4))
+print("p-value =", round(p_value, 6))
+print("alpha =", alpha)
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+
+      <div class="callout">
+        配對檢定最容易出錯的是「方向」。這份模板固定定義
+        <code>d = after - before</code>，所以若要檢查「後測是否高於前測」，
+        使用 <code>alternative = "greater"</code>。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="proportion-z">10.3 兩母體比例 z 檢定</h2>
+      <p>
+        適合比較兩個獨立群體的比例，例如 A 方案與 B 方案的購買率、成功率或支持率。
+      </p>
+
+<pre><code>import numpy as np
+from statsmodels.stats.proportion import proportions_ztest
+
+# =========================================================
+# 模型 3：兩母體比例 z 檢定
+# H0: p1 - p2 = 0
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改這裡
+# ---------------------------------------------------------
+
+# Group 1：100 人中有 60 人成功
+success1 = 60
+n1 = 100
+
+# Group 2：100 人中有 50 人成功
+success2 = 50
+n2 = 100
+
+alpha = 0.05
+
+# "two-sided"：H1: p1 != p2
+# "larger"   ：H1: p1 &gt; p2
+# "smaller"  ：H1: p1 &lt; p2
+alternative = "two-sided"
+
+
+# ---------------------------------------------------------
+# 執行檢定
+# ---------------------------------------------------------
+
+success = np.array([
+    success1,
+    success2
+])
+
+n = np.array([
+    n1,
+    n2
+])
+
+z_stat, p_value = proportions_ztest(
+    count=success,
+    nobs=n,
+    alternative=alternative
+)
+
+p1_hat = success1 / n1
+p2_hat = success2 / n2
+
+
+# ---------------------------------------------------------
+# 自動產生假設
+# ---------------------------------------------------------
+
+h0 = "H0: p1 - p2 = 0"
+
+if alternative == "two-sided":
+    h1 = "H1: p1 - p2 ≠ 0"
+elif alternative == "larger":
+    h1 = "H1: p1 - p2 &gt; 0"
+else:
+    h1 = "H1: p1 - p2 &lt; 0"
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "有足夠證據支持 H1。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據支持 H1。"
+
+
+# ---------------------------------------------------------
+# 輸出
+# ---------------------------------------------------------
+
+print("=== 兩母體比例 z 檢定 ===")
+print(h0)
+print(h1)
+print("Group 1 樣本比例 =", round(p1_hat, 4))
+print("Group 2 樣本比例 =", round(p2_hat, 4))
+print("比例差 =", round(p1_hat - p2_hat, 4))
+print("z =", round(z_stat, 4))
+print("p-value =", round(p_value, 6))
+print("alpha =", alpha)
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+
+      <div class="callout">
+        注意：<code>statsmodels</code> 在比例檢定中的單尾名稱是
+        <code>"larger"</code> 與 <code>"smaller"</code>，
+        和 SciPy t 檢定使用的 <code>"greater"</code>、
+        <code>"less"</code> 不同。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="quick-guide">快速選擇</h2>
+
+      <ul>
+        <li>
+          <strong>不同兩組 + 比平均數</strong> →
+          <code>stats.ttest_ind()</code>
+        </li>
+        <li>
+          <strong>同一批前後 + 比平均數</strong> →
+          <code>stats.ttest_rel()</code>
+        </li>
+        <li>
+          <strong>不同兩組 + 比比例</strong> →
+          <code>proportions_ztest()</code>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 id="practice">練習題</h2>
+      <ol>
+        <li>使用模型 1 比較兩班學生的平均成績是否不同。</li>
+        <li>使用模型 2 檢定後測成績是否顯著高於前測。</li>
+        <li>使用模型 3 檢定 A 方案的成功率是否高於 B 方案。</li>
+        <li>將 <code>alpha</code> 從 0.05 改成 0.01，觀察結論是否改變。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="summary">本章重點整理</h2>
+      <ul>
+        <li>兩個獨立群體比較平均數：獨立兩樣本 t 檢定。</li>
+        <li>同一批對象前後比較：配對 t 檢定。</li>
+        <li>兩個獨立群體比較比例：兩母體比例 z 檢定。</li>
+        <li>三個模板都可以修改 <code>alpha</code> 與 <code>alternative</code>。</li>
+        <li>當 <code>p-value &lt; alpha</code> 時拒絕 H₀。</li>
+      </ul>
+    </section>
 
     <nav class="chapter-pagination" aria-label="章節切換">
-      
-        <a href="ch09.html">
-          <span class="pagination-label">← 上一章</span>
-          <span class="pagination-title">第 9 章｜信賴區間</span>
-        </a>
-        
-      
-        <a href="ch11.html">
-          <span class="pagination-label">下一章 →</span>
-          <span class="pagination-title">第 11 章｜兩組與多組比較</span>
-        </a>
-        
+      <a href="ch09.html">
+        <span class="pagination-label">← 上一章</span>
+        <span class="pagination-title">第 9 章｜假設檢定</span>
+      </a>
+
+      <a href="ch11.html">
+        <span class="pagination-label">下一章 →</span>
+        <span class="pagination-title">第 11 章</span>
+      </a>
     </nav>
 
     <footer class="site-footer">
-      © <span id="current-year"></span> Python 統計學教室．Built for GitHub Pages.
+      <p>© <span id="current-year"></span> Python 統計學教室．Built for GitHub Pages.</p>
     </footer>
   </main>
 
@@ -99,8 +417,8 @@ print("Hello, Statistics!")</code></pre>
     <ul id="page-toc-list"></ul>
   </aside>
 </div>
+
 <div id="backdrop" class="backdrop"></div>
 <script src="../assets/js/site.js"></script>
-
 </body>
 </html>
