@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Python 統計學教室第 12 章：相關與迴歸分析">
-  <title>第 12 章｜相關與迴歸分析｜Python 統計學教室</title>
+  <meta name="description" content="Python 統計學教室第 12 章：適合度與獨立性檢定">
+  <title>第 12 章｜適合度與獨立性檢定｜Python 統計學教室</title>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body data-chapter="12">
@@ -20,7 +20,6 @@
   </div>
 </header>
 
-
 <div class="site-layout">
   <aside class="sidebar" aria-label="課程章節導覽">
     <p class="sidebar-title">Course Menu</p>
@@ -30,63 +29,210 @@
   <main class="content">
     <section class="hero">
       <p class="eyebrow">Chapter 12</p>
-      <h1>相關與迴歸分析</h1>
-      <p class="lead">相關係數、簡單迴歸與模型診斷</p>
+      <h1>適合度與獨立性檢定</h1>
+      <p class="lead">
+        四個可直接複製修改的 Python 模板：多項分配適合度檢定、獨立性檢定、常態性適合度檢定與 Jarque–Bera 檢定。
+      </p>
     </section>
 
-    <section><h2 id="learning-goals">本章學習目標</h2>
-<ul>
-  <li>理解本章核心概念。</li>
-  <li>知道如何使用 Python 完成基本分析。</li>
-  <li>能解讀輸出結果並說明其統計意義。</li>
-</ul>
-</section>
-<section><h2 id="concepts">核心觀念</h2>
-<div class="placeholder">
-  <strong>內容待補：</strong>
-  這裡可以放定義、重要公式、直覺解釋與常見誤區。
-</div>
-</section>
-<section><h2 id="python-demo">Python 實作</h2>
-<p>以下先保留一個可替換的程式碼區塊：</p>
-<pre><code># TODO: 在此加入本章 Python 範例
-import numpy as np
-import pandas as pd
+    <section>
+      <h2 id="choose-test">先選你要哪一個</h2>
+      <ul>
+        <li><strong>觀察次數是否符合指定比例：</strong>Chi-square goodness-of-fit test。</li>
+        <li><strong>兩個類別變數是否互相獨立：</strong>Chi-square test of independence。</li>
+        <li><strong>資料是否符合常態分配：</strong>常態性適合度檢定。</li>
+        <li><strong>用偏態與峰度檢查常態性：</strong>Jarque–Bera test。</li>
+      </ul>
+    </section>
 
-print("Hello, Statistics!")</code></pre>
-</section>
-<section><h2 id="example">範例解析</h2>
-<div class="placeholder">
-  <strong>範例待補：</strong>
-  可以加入資料集、計算步驟、圖表與結果解讀。
-</div>
-</section>
-<section><h2 id="practice">練習題</h2>
-<ol>
-  <li>概念題：請解釋本章最重要的統計概念。</li>
-  <li>計算題：請使用 Python 完成一個基礎分析。</li>
-  <li>應用題：請根據分析結果提出結論。</li>
-</ol>
-</section>
-<section><h2 id="summary">本章重點整理</h2>
-<div class="callout">
-  本區可整理三到五個重點，作為考前複習與快速查閱。
-</div>
-</section>
+    <section>
+      <h2 id="multinomial-gof">12.1 多項分配適合度檢定</h2>
+<pre><code>import numpy as np
+from scipy import stats
+
+# 實際觀察次數
+observed = np.array([35, 45, 20])
+
+# H0 下的理論比例
+expected_prob = np.array([0.30, 0.50, 0.20])
+
+alpha = 0.05
+
+total = observed.sum()
+expected = total * expected_prob
+
+chi2_stat, p_value = stats.chisquare(
+    f_obs=observed,
+    f_exp=expected
+)
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "觀察分布與理論分布有顯著差異。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據認為觀察分布與理論分布不同。"
+
+print("Observed =", observed)
+print("Expected =", expected)
+print("χ² =", round(chi2_stat, 4))
+print("p-value =", round(p_value, 6))
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+    </section>
+
+    <section>
+      <h2 id="independence-test">12.2 獨立性檢定</h2>
+<pre><code>import numpy as np
+from scipy import stats
+
+# 列：Group 1、Group 2
+# 欄：購買、不購買
+table = np.array([
+    [60, 40],
+    [45, 55]
+])
+
+alpha = 0.05
+
+chi2_stat, p_value, df, expected = stats.chi2_contingency(
+    table
+)
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "兩個類別變數之間有顯著關聯。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據認為兩個類別變數有關聯。"
+
+print("Observed Table:")
+print(table)
+print("\nExpected Table:")
+print(np.round(expected, 2))
+print("\nχ² =", round(chi2_stat, 4))
+print("df =", df)
+print("p-value =", round(p_value, 6))
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+    </section>
+
+    <section>
+      <h2 id="normality-gof">12.3 常態性適合度檢定</h2>
+<pre><code>import numpy as np
+from scipy import stats
+
+data = np.array([
+    51, 49, 50, 52, 48,
+    53, 47, 50, 51, 49,
+    52, 48, 50, 51, 49
+], dtype=float)
+
+alpha = 0.05
+
+mu = np.mean(data)
+sigma = np.std(data, ddof=1)
+
+z_data = (data - mu) / sigma
+
+ks_stat, p_value = stats.kstest(
+    z_data,
+    "norm"
+)
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "資料有顯著證據顯示不符合常態分配。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據認為資料偏離常態分配。"
+
+print("K-S statistic =", round(ks_stat, 4))
+print("p-value =", round(p_value, 6))
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+
+      <div class="callout">
+        這裡是教學用快速模板。若平均數與標準差也由同一份資料估計，嚴格來說標準 K-S 檢定的 p-value 並不是 Lilliefors 校正後的精確結果。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="jarque-bera">12.4 Jarque–Bera 檢定</h2>
+<pre><code>import numpy as np
+from scipy import stats
+
+data = np.array([
+    51, 49, 50, 52, 48,
+    53, 47, 50, 51, 49,
+    52, 48, 50, 51, 49
+], dtype=float)
+
+alpha = 0.05
+
+result = stats.jarque_bera(data)
+
+jb_stat = result.statistic
+p_value = result.pvalue
+
+skewness = stats.skew(data)
+kurtosis = stats.kurtosis(
+    data,
+    fisher=False
+)
+
+if p_value &lt; alpha:
+    decision = "拒絕 H0"
+    conclusion = "資料有顯著證據顯示不符合常態分配。"
+else:
+    decision = "不拒絕 H0"
+    conclusion = "沒有足夠證據認為資料偏離常態分配。"
+
+print("Skewness =", round(skewness, 4))
+print("Kurtosis =", round(kurtosis, 4))
+print("JB =", round(jb_stat, 4))
+print("p-value =", round(p_value, 6))
+print("決策：", decision)
+print("結論：", conclusion)</code></pre>
+    </section>
+
+    <section>
+      <h2 id="quick-guide">快速選擇</h2>
+      <ul>
+        <li><code>stats.chisquare()</code>：實際次數 vs 理論比例。</li>
+        <li><code>stats.chi2_contingency()</code>：兩個類別變數是否獨立。</li>
+        <li><code>stats.kstest()</code>：常態性適合度快速檢查。</li>
+        <li><code>stats.jarque_bera()</code>：用偏態與峰度檢查常態性。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 id="practice">練習題</h2>
+      <ol>
+        <li>修改模型 1 的理論比例，觀察檢定結果。</li>
+        <li>修改模型 2 的列聯表，檢查兩個類別變數是否獨立。</li>
+        <li>把模型 3 的資料改成明顯右偏資料，觀察 p-value。</li>
+        <li>使用同一份資料比較 K-S 與 Jarque–Bera 的結果。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="summary">本章重點整理</h2>
+      <div class="callout">
+        多項分配適合度與類別變數獨立性主要使用 χ²；
+        常態性則可使用適合度檢定或 Jarque–Bera 檢定。
+      </div>
+    </section>
 
     <nav class="chapter-pagination" aria-label="章節切換">
-      
-        <a href="ch11.html">
-          <span class="pagination-label">← 上一章</span>
-          <span class="pagination-title">第 11 章｜兩組與多組比較</span>
-        </a>
-        
-      
-        <a href="ch13.html">
-          <span class="pagination-label">下一章 →</span>
-          <span class="pagination-title">第 13 章｜綜合專題</span>
-        </a>
-        
+      <a href="ch11.html">
+        <span class="pagination-label">← 上一章</span>
+        <span class="pagination-title">第 11 章｜變異數檢定</span>
+      </a>
+      <a href="ch13.html">
+        <span class="pagination-label">下一章 →</span>
+        <span class="pagination-title">第 13 章</span>
+      </a>
     </nav>
 
     <footer class="site-footer">
@@ -99,6 +245,7 @@ print("Hello, Statistics!")</code></pre>
     <ul id="page-toc-list"></ul>
   </aside>
 </div>
+
 <div id="backdrop" class="backdrop"></div>
 <script src="../assets/js/site.js"></script>
 
