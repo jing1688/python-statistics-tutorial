@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Python 統計學教室第 13 章：綜合專題">
-  <title>第 13 章｜綜合專題｜Python 統計學教室</title>
+  <meta name="description" content="Python 統計學教室第 13 章：ANOVA">
+  <title>第 13 章｜ANOVA｜Python 統計學教室</title>
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body data-chapter="13">
@@ -20,7 +20,6 @@
   </div>
 </header>
 
-
 <div class="site-layout">
   <aside class="sidebar" aria-label="課程章節導覽">
     <p class="sidebar-title">Course Menu</p>
@@ -30,67 +29,536 @@
   <main class="content">
     <section class="hero">
       <p class="eyebrow">Chapter 13</p>
-      <h1>綜合專題</h1>
-      <p class="lead">從資料整理到統計推論的完整分析流程</p>
+      <h1>ANOVA</h1>
+      <p class="lead">
+        三個可以直接複製修改的 Python 模板：
+        One-way ANOVA、Two-way ANOVA 無交互作用、Two-way ANOVA 有交互作用。
+      </p>
     </section>
 
-    <section><h2 id="learning-goals">本章學習目標</h2>
-<ul>
-  <li>理解本章核心概念。</li>
-  <li>知道如何使用 Python 完成基本分析。</li>
-  <li>能解讀輸出結果並說明其統計意義。</li>
-</ul>
-</section>
-<section><h2 id="concepts">核心觀念</h2>
-<div class="placeholder">
-  <strong>內容待補：</strong>
-  這裡可以放定義、重要公式、直覺解釋與常見誤區。
-</div>
-</section>
-<section><h2 id="python-demo">Python 實作</h2>
-<p>以下先保留一個可替換的程式碼區塊：</p>
-<pre><code># TODO: 在此加入本章 Python 範例
-import numpy as np
-import pandas as pd
+    <section>
+      <h2 id="choose-model">先選你要哪一個</h2>
+      <ul>
+        <li><strong>只有一個因子：</strong>One-way ANOVA。</li>
+        <li><strong>有兩個因子，但只看各自主效果：</strong>Two-way ANOVA 無交互作用。</li>
+        <li><strong>有兩個因子，而且要檢查兩因子是否互相影響：</strong>Two-way ANOVA 有交互作用。</li>
+      </ul>
 
-print("Hello, Statistics!")</code></pre>
-</section>
-<section><h2 id="example">範例解析</h2>
-<div class="placeholder">
-  <strong>範例待補：</strong>
-  可以加入資料集、計算步驟、圖表與結果解讀。
-</div>
-</section>
-<section><h2 id="practice">練習題</h2>
-<ol>
-  <li>概念題：請解釋本章最重要的統計概念。</li>
-  <li>計算題：請使用 Python 完成一個基礎分析。</li>
-  <li>應用題：請根據分析結果提出結論。</li>
-</ol>
-</section>
-<section><h2 id="summary">本章重點整理</h2>
-<div class="callout">
-  本區可整理三到五個重點，作為考前複習與快速查閱。
-</div>
-</section>
+      <div class="callout">
+        ANOVA 的核心問題都是：不同組別的母體平均數是否相同。
+        當 <code>p-value &lt; alpha</code> 時，表示至少有某些平均數存在顯著差異。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="one-way">13.1 One-way ANOVA</h2>
+
+      <p>
+        適合只有一個類別因子，但有三組以上要比較平均數的情況。
+        例如比較三種教學方法的平均成績。
+      </p>
+
+<pre><code>import numpy as np
+from scipy import stats
+
+# =========================================================
+# 模型 1：One-way ANOVA
+# H0: μ1 = μ2 = μ3 = ...
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改這裡
+# ---------------------------------------------------------
+
+group1 = np.array([
+    78, 82, 85, 80, 79
+])
+
+group2 = np.array([
+    88, 90, 85, 91, 87
+])
+
+group3 = np.array([
+    72, 75, 70, 74, 73
+])
+
+alpha = 0.05
+
+
+# ---------------------------------------------------------
+# 執行 ANOVA
+# ---------------------------------------------------------
+
+F_stat, p_value = stats.f_oneway(
+    group1,
+    group2,
+    group3
+)
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+if p_value &lt; alpha:
+
+    decision = "拒絕 H0"
+
+    conclusion = (
+        "至少有一組母體平均數與其他組不同。"
+    )
+
+else:
+
+    decision = "不拒絕 H0"
+
+    conclusion = (
+        "沒有足夠證據認為各組母體平均數不同。"
+    )
+
+
+# ---------------------------------------------------------
+# 輸出
+# ---------------------------------------------------------
+
+print("=== One-way ANOVA ===")
+
+print(
+    "Group 1 平均數 =",
+    round(np.mean(group1), 4)
+)
+
+print(
+    "Group 2 平均數 =",
+    round(np.mean(group2), 4)
+)
+
+print(
+    "Group 3 平均數 =",
+    round(np.mean(group3), 4)
+)
+
+print(
+    "F =",
+    round(F_stat, 4)
+)
+
+print(
+    "p-value =",
+    round(p_value, 6)
+)
+
+print(
+    "alpha =",
+    alpha
+)
+
+print(
+    "決策：",
+    decision
+)
+
+print(
+    "結論：",
+    conclusion
+)</code></pre>
+
+      <div class="callout">
+        ANOVA 顯著只代表「至少有一組不同」，不會直接告訴你是哪兩組不同。
+        如果需要知道差異在哪裡，通常再做事後比較，例如 Tukey HSD。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="two-way-no-interaction">13.2 Two-way ANOVA：無交互作用</h2>
+
+      <p>
+        適合有兩個類別因子，想分別檢查 Factor A 與 Factor B 是否影響結果，
+        但暫時不考慮兩者的交互作用。
+      </p>
+
+      <p>
+        例如研究「教學方法」與「性別」是否影響成績。
+      </p>
+
+<pre><code>import pandas as pd
+import statsmodels.api as sm
+
+from statsmodels.formula.api import ols
+
+# =========================================================
+# 模型 2：Two-way ANOVA 無交互作用
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改資料
+# ---------------------------------------------------------
+
+df = pd.DataFrame({
+    "score": [
+        78, 82, 80,
+        85, 88, 84,
+        75, 77, 76,
+        82, 84, 83
+    ],
+
+    "method": [
+        "A", "A", "A",
+        "A", "A", "A",
+        "B", "B", "B",
+        "B", "B", "B"
+    ],
+
+    "gender": [
+        "M", "M", "M",
+        "F", "F", "F",
+        "M", "M", "M",
+        "F", "F", "F"
+    ]
+})
+
+alpha = 0.05
+
+
+# ---------------------------------------------------------
+# 建立模型
+# 不加入 method:gender
+# ---------------------------------------------------------
+
+model = ols(
+    "score ~ C(method) + C(gender)",
+    data=df
+).fit()
+
+
+# ---------------------------------------------------------
+# ANOVA Table
+# ---------------------------------------------------------
+
+anova_table = sm.stats.anova_lm(
+    model,
+    typ=2
+)
+
+print(
+    "=== Two-way ANOVA：無交互作用 ==="
+)
+
+print(
+    anova_table
+)
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+p_method = anova_table.loc[
+    "C(method)",
+    "PR(&gt;F)"
+]
+
+p_gender = anova_table.loc[
+    "C(gender)",
+    "PR(&gt;F)"
+]
+
+print()
+
+if p_method &lt; alpha:
+    print(
+        "Method：拒絕 H0，"
+        "教學方法對平均成績有顯著影響。"
+    )
+else:
+    print(
+        "Method：不拒絕 H0，"
+        "沒有足夠證據認為教學方法有影響。"
+    )
+
+if p_gender &lt; alpha:
+    print(
+        "Gender：拒絕 H0，"
+        "性別對平均成績有顯著影響。"
+    )
+else:
+    print(
+        "Gender：不拒絕 H0，"
+        "沒有足夠證據認為性別有影響。"
+    )</code></pre>
+
+      <div class="callout">
+        無交互作用模型的公式是
+        <code>Y ~ C(A) + C(B)</code>。
+        它只檢查 A 與 B 各自的主效果。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="two-way-interaction">13.3 Two-way ANOVA：有交互作用</h2>
+
+      <p>
+        如果除了想看 Factor A 與 Factor B 的主效果，
+        還想知道「A 的效果是否會因 B 不同而改變」，
+        就要加入交互作用項。
+      </p>
+
+<pre><code>import pandas as pd
+import statsmodels.api as sm
+
+from statsmodels.formula.api import ols
+
+# =========================================================
+# 模型 3：Two-way ANOVA 有交互作用
+# =========================================================
+
+# ---------------------------------------------------------
+# 使用者設定區：只需要改資料
+# ---------------------------------------------------------
+
+df = pd.DataFrame({
+    "score": [
+        78, 82, 80,
+        90, 92, 91,
+        75, 77, 76,
+        80, 81, 79
+    ],
+
+    "method": [
+        "A", "A", "A",
+        "A", "A", "A",
+        "B", "B", "B",
+        "B", "B", "B"
+    ],
+
+    "gender": [
+        "M", "M", "M",
+        "F", "F", "F",
+        "M", "M", "M",
+        "F", "F", "F"
+    ]
+})
+
+alpha = 0.05
+
+
+# ---------------------------------------------------------
+# 建立模型
+# C(method) * C(gender)
+# 等於：
+# C(method)
+# + C(gender)
+# + C(method):C(gender)
+# ---------------------------------------------------------
+
+model = ols(
+    "score ~ C(method) * C(gender)",
+    data=df
+).fit()
+
+
+# ---------------------------------------------------------
+# ANOVA Table
+# ---------------------------------------------------------
+
+anova_table = sm.stats.anova_lm(
+    model,
+    typ=2
+)
+
+print(
+    "=== Two-way ANOVA：有交互作用 ==="
+)
+
+print(
+    anova_table
+)
+
+
+# ---------------------------------------------------------
+# 取得 p-value
+# ---------------------------------------------------------
+
+p_method = anova_table.loc[
+    "C(method)",
+    "PR(&gt;F)"
+]
+
+p_gender = anova_table.loc[
+    "C(gender)",
+    "PR(&gt;F)"
+]
+
+p_interaction = anova_table.loc[
+    "C(method):C(gender)",
+    "PR(&gt;F)"
+]
+
+
+# ---------------------------------------------------------
+# 自動判斷
+# ---------------------------------------------------------
+
+print()
+
+if p_method &lt; alpha:
+    print(
+        "Method 主效果：顯著"
+    )
+else:
+    print(
+        "Method 主效果：不顯著"
+    )
+
+if p_gender &lt; alpha:
+    print(
+        "Gender 主效果：顯著"
+    )
+else:
+    print(
+        "Gender 主效果：不顯著"
+    )
+
+if p_interaction &lt; alpha:
+
+    print(
+        "Interaction：顯著"
+    )
+
+    print(
+        "教學方法的效果會因性別不同而改變。"
+    )
+
+else:
+
+    print(
+        "Interaction：不顯著"
+    )
+
+    print(
+        "沒有足夠證據顯示兩個因子存在交互作用。"
+    )</code></pre>
+
+      <div class="callout">
+        有交互作用的公式是
+        <code>Y ~ C(A) * C(B)</code>。<br>
+        其中 <code>*</code> 會同時加入
+        A、B 與 <code>A:B</code> 交互作用項。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="interaction-plot">13.4 畫交互作用圖</h2>
+
+      <p>
+        Two-way ANOVA 如果有交互作用，
+        最直觀的方法之一就是畫 interaction plot。
+      </p>
+
+<pre><code>import matplotlib.pyplot as plt
+
+from statsmodels.graphics.factorplots import interaction_plot
+
+interaction_plot(
+    x=df["method"],
+    trace=df["gender"],
+    response=df["score"]
+)
+
+plt.xlabel(
+    "Teaching Method"
+)
+
+plt.ylabel(
+    "Mean Score"
+)
+
+plt.title(
+    "Interaction Plot"
+)
+
+plt.show()</code></pre>
+
+      <div class="callout">
+        如果兩條線明顯不平行甚至交叉，通常代表可能存在交互作用；
+        最終仍以 ANOVA 表中的 interaction p-value 判斷。
+      </div>
+    </section>
+
+    <section>
+      <h2 id="quick-guide">快速選擇</h2>
+
+      <ul>
+        <li>
+          <strong>一個因子</strong> →
+          <code>stats.f_oneway()</code>
+        </li>
+
+        <li>
+          <strong>兩個因子，不考慮交互</strong> →
+          <code>Y ~ C(A) + C(B)</code>
+        </li>
+
+        <li>
+          <strong>兩個因子，要檢查交互</strong> →
+          <code>Y ~ C(A) * C(B)</code>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 id="practice">練習題</h2>
+
+      <ol>
+        <li>
+          使用 One-way ANOVA 比較四種教學方法的平均成績。
+        </li>
+
+        <li>
+          建立一份包含「教學方法」與「性別」的資料，
+          執行 Two-way ANOVA 無交互作用模型。
+        </li>
+
+        <li>
+          將模型改成
+          <code>C(method) * C(gender)</code>，
+          檢查交互作用是否顯著。
+        </li>
+
+        <li>
+          畫出 interaction plot，
+          比較圖形與交互作用 p-value 的結果。
+        </li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="summary">本章重點整理</h2>
+
+      <div class="callout">
+        One-way ANOVA 處理一個因子；
+        Two-way ANOVA 處理兩個因子；
+        如果想檢查其中一個因子的效果是否會受到另一個因子影響，
+        就在模型中加入 interaction。
+      </div>
+    </section>
 
     <nav class="chapter-pagination" aria-label="章節切換">
-      
-        <a href="ch12.html">
-          <span class="pagination-label">← 上一章</span>
-          <span class="pagination-title">第 12 章｜相關與迴歸分析</span>
-        </a>
-        
-      
-        <a href="../index.html">
-          <span class="pagination-label">完成課程 →</span>
-          <span class="pagination-title">回到課程首頁</span>
-        </a>
-        
+      <a href="ch12.html">
+        <span class="pagination-label">← 上一章</span>
+        <span class="pagination-title">第 12 章｜適合度與獨立性檢定</span>
+      </a>
+
+      <a href="../index.html">
+        <span class="pagination-label">完成課程 →</span>
+        <span class="pagination-title">回到課程首頁</span>
+      </a>
     </nav>
 
     <footer class="site-footer">
       © <span id="current-year"></span> Python 統計學教室．Built for GitHub Pages.
+      <br>
+      此教材基於 2025 統計學（暑）蕭佳蘋助教之教材改編而成。
     </footer>
   </main>
 
@@ -99,6 +567,7 @@ print("Hello, Statistics!")</code></pre>
     <ul id="page-toc-list"></ul>
   </aside>
 </div>
+
 <div id="backdrop" class="backdrop"></div>
 <script src="../assets/js/site.js"></script>
 
