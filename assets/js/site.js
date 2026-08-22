@@ -11,7 +11,7 @@ const chapters = [
   ["10", "假設檢定2"],
   ["11", "變異數檢定"],
   ["12", "適合度與獨立性檢定"],
-  ["13", "綜合專題"]
+  ["13", "ANOVA"]
 ];
 
 function buildChapterNav() {
